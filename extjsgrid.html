@@ -1,0 +1,453 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>Tutorial Part Twelve : EXT / SQL / PHP For Newbies</title>
+<link rel="stylesheet" type="text/css" href="style.css"  />
+<link rel="stylesheet" type="text/css" href="resources/css/ext-all.css"/>
+<script type="text/javascript" src="adapter/ext/ext-base.js"></script>
+<script type="text/javascript" src="ext-all.js"></script>
+<script type="text/javascript" src="searchfield.js"></script>
+
+<script>
+// Global vars
+var PresidentsDataStore;
+var PresidentsColumnModel;
+var PresidentListingEditorGrid;
+var PresidentListingWindow;
+var PresidentCreateForm;
+var PresidentCreateWindow;
+var FirstNameField;
+var LastNameField;
+var EnteringOfficeField;
+var LeavingOfficeField;
+var IncomeField;
+var PartyField;
+var PresidentListingSelectedRow;
+var PresidentListingContextMenu;
+
+Ext.onReady(function(){
+
+  Ext.QuickTips.init();
+  
+  // reset the Form before opening it
+  function resetPresidentForm(){
+    FirstNameField.setValue('');
+    LastNameField.setValue('');
+    EnteringOfficeField.setValue('');
+    LeavingOfficeField.setValue('');
+    IncomeField.setValue('');
+    PartyField.setValue('');    
+  }
+  
+  // check if the form is valid
+  function isPresidentFormValid(){
+      return(FirstNameField.isValid() && LastNameField.isValid() && EnteringOfficeField.isValid() && LeavingOfficeField.isValid() && IncomeField.isValid() && PartyField.isValid());
+  }
+  
+  // display or bring forth the form
+  function displayFormWindow(){
+     if(!PresidentCreateWindow.isVisible()){
+       resetPresidentForm();
+       PresidentCreateWindow.show();
+     } else {
+       PresidentCreateWindow.toFront();
+     }
+  }
+  
+ 
+  function startAdvancedSearch(){
+      // local vars
+      var PresidentSearchForm;
+      var PresidentSearchWindow;
+      var SearchFirstNameItem;
+      var SearchLastNameItem;
+      var SearchPartyItem;
+      var SearchEnteringItem;
+      var SearchLeavingItem;
+      
+     function listSearch(){
+         // render according to a SQL date format.
+         var startDate = "";
+         var endDate = "";
+         if(SearchEnteringItem.getValue() !== "") {
+            startDate = SearchEnteringItem.getValue().format('Y-m-d');
+         }
+         if(SearchLeavingItem.getValue() !== "") {
+            endDate = SearchLeavingItem.getValue().format('Y-m-d');
+         }
+         
+         // change the store parameters
+        PresidentsDataStore.baseParams = {
+         task: 'SEARCH',
+         firstname: SearchFirstNameItem.getValue(),
+            lastname : SearchLastNameItem.getValue(),
+            party : SearchPartyItem.getValue(),
+            enteringoffice : startDate,
+            leavingoffice : endDate
+       };
+         // Cause the datastore to do another query : 
+       PresidentsDataStore.reload({params: {start: 0, limit: 15}});
+     }
+     
+     function resetSearch(){
+         // reset the store parameters
+        PresidentsDataStore.baseParams = {
+         task: 'LISTING'
+       };
+         // Cause the datastore to do another query : 
+       PresidentsDataStore.reload({params: {start: 0, limit: 15}});
+         PresidentSearchWindow.close();
+     }
+     
+      SearchFirstNameItem = new Ext.form.TextField({
+          fieldLabel: 'First Name',
+          maxLength: 20,
+          anchor : '95%',
+          maskRe: /([a-zA-Z0-9\s]+)$/
+            });
+
+      SearchLastNameItem = new Ext.form.TextField({
+          fieldLabel: 'Last Name',
+          maxLength: 20,
+          anchor : '95%',    
+          maskRe: /([a-zA-Z0-9\s]+)$/  
+            });
+      
+      SearchPartyItem = new Ext.form.ComboBox({
+         fieldLabel: 'Party',
+         store:new Ext.data.SimpleStore({
+          fields:['partyValue', 'partyName'],
+          data: [['1','No Party'],['2','Federalist'],['3','Democratic-Republican'],['4','Democratic'],['5','Whig'],['6','Republican']]
+          }),
+         mode: 'local',
+         displayField: 'partyName',
+         valueField: 'partyValue',
+         anchor:'95%',
+         triggerAction: 'all'
+            });
+            
+      SearchEnteringItem = new Ext.form.DateField({
+          fieldLabel: 'Entered Office after',
+          format : 'm/d/Y',
+          anchor:'95%'
+          });
+          
+      SearchLeavingItem = new Ext.form.DateField({
+          fieldLabel: 'Left Office before',
+          format : 'm/d/Y',
+          anchor:'95%'
+          });
+    
+     PresidentSearchForm = new Ext.FormPanel({
+       //labelAlign: 'top',
+       bodyStyle: 'padding: 5px',
+       width: 300,
+       items: [{
+         layout: 'form',
+         border: false,
+         items: [ SearchFirstNameItem,SearchLastNameItem,SearchPartyItem,SearchEnteringItem, SearchLeavingItem ],
+         buttons: [{
+               text: 'Search',
+               handler: listSearch
+             },{
+               text: 'Close',
+               handler: resetSearch
+             }]
+         }]
+     });
+ 
+     
+     PresidentSearchWindow = new Ext.Window({
+         title: 'Price Search',
+         closable:true,
+         width: 200,
+         height: 400,
+         plain:true,
+         layout: 'fit',
+         items: PresidentSearchForm
+     });
+ 
+     
+     // once all is done, show the search window
+     PresidentSearchWindow.show();
+  } 
+  
+    function printListing(){
+      var searchquery = "";
+      var searchfirstname = "";
+      var searchlastname = "";
+      var searchparty = "";
+      var searchenteringoffice = "";
+      var searchleavingoffice = "";
+      var win;               // our popup window
+      // check if we do have some search data...
+      if(PresidentsDataStore.baseParams.query!==null){searchquery = PresidentsDataStore.baseParams.query;}
+      if(PresidentsDataStore.baseParams.firstname!==null){searchfirstname = PresidentsDataStore.baseParams.firstname;}
+      if(PresidentsDataStore.baseParams.lastname!==null){searchlastname = PresidentsDataStore.baseParams.lastname;}
+      if(PresidentsDataStore.baseParams.party!==null){searchparty = PresidentsDataStore.baseParams.party;}
+      if(PresidentsDataStore.baseParams.enteringoffice!==null){searchenteringoffice = PresidentsDataStore.baseParams.enteringoffice;}
+      if(PresidentsDataStore.baseParams.leavingoffice!==null){searchleavingoffice = PresidentsDataStore.baseParams.leavingoffice;}
+         
+      Ext.Ajax.request({   
+        waitMsg: 'Please Wait...',
+        url: 'database.php',
+        params: {
+          task: "PRINT",
+               // we have to send all of the search
+
+          query: searchquery,                                 // if we are doing a quicksearch, use this
+          firstname : searchfirstname,                        // if we are doing advanced search, use this
+          lastname : searchlastname,
+          party : searchparty,
+          enteringoffice : searchenteringoffice,
+          leavingoffice : searchleavingoffice,
+          currentlisting: PresidentsDataStore.baseParams.task // this tells us if we are searching or not
+        }, 
+        success: function(response){              
+          var result=eval(response.responseText);
+          switch(result){
+          case 1:
+            win = window.open('./presidentslist.html','presidentslist','height=400,width=600,resizable=1,scrollbars=1, menubar=1');
+            win.print();
+            break;
+          default:
+            Ext.MessageBox.alert('Uh hu...','Unable to print the grid!');
+            break;
+          }  
+        },
+        failure: function(response){
+          var result=response.responseText;
+          Ext.MessageBox.alert('error','could not connect to the database. retry later');      
+        }                      
+      });
+  }
+ 
+  function onPresidentListingEditorGridContextMenu(grid, rowIndex, e) {
+    e.stopEvent();
+    var coords = e.getXY();
+    PresidentListingContextMenu.rowRecord = grid.store.getAt(rowIndex);
+    grid.selModel.selectRow(rowIndex);
+    PresidentListingSelectedRow=rowIndex;
+    PresidentListingContextMenu.showAt([coords[0], coords[1]]);
+  }
+ 
+  function modifyPresidentContextMenu(){
+      PresidentListingEditorGrid.startEditing(PresidentListingSelectedRow,1);
+  }
+
+  function deletePresidentContextMenu(){
+      confirmDeletePresidents();
+  }
+
+  function printListingContextMenu(){
+      printListing();
+  }
+
+  
+  // << CONFIG >>
+  PresidentsDataStore = new Ext.data.Store({
+      id: 'PresidentsDataStore',
+      
+	  proxy: new Ext.data.HttpProxy({
+                url: 'database.php', 
+                method: 'POST'
+            }),
+            baseParams:{task: "LISTING"}, // this parameter is passed for any HTTP request
+      reader: new Ext.data.JsonReader({
+        root: 'results',
+        totalProperty: 'total',
+        id: 'id'
+      },[ 
+        {name: 'recordnumber', type: 'int', mapping: 'recordnumber'},
+        {name: 'itemprice', type: 'float', mapping: 'itemprice'},
+        {name: 'itemname', type: 'string', mapping: 'itemname'},
+        {name: 'storename', type: 'string', mapping: 'storename'},
+        {name: 'storeaddress', type: 'string', mapping: 'storeaddress'},
+        {name: 'pricedate', type: 'date', mapping: 'pricedate'},
+        {name: 'upccode', type: 'string', mapping: 'upccode'},
+        {name: 'storecode', type: 'int', mapping: 'storecode'}
+      ]),
+      sortInfo:{field: 'recordnumber', direction: "ASC"}
+    });
+    
+  PresidentsColumnModel = new Ext.grid.ColumnModel(
+    [{
+        header: '#',
+        readOnly: true,
+        dataIndex: 'recordnumber',
+        width: 50		
+        
+      },{
+        header: 'Item Price',
+        readOnly: true,
+		dataIndex: 'itemprice',
+		renderer: Ext.util.Format.usMoney,
+        width: 60
+  
+      },{
+        header: 'Item Name',
+		readOnly: true,
+        dataIndex: 'itemname',
+        width: 300
+        
+      },{
+        header: 'Store Name',
+        readOnly: true,
+        dataIndex: 'storename',
+        width: 150,       
+        hidden: false
+      },{
+        header: 'Price Date',
+        dataIndex: 'pricedate',
+        renderer: Ext.util.Format.dateRenderer('m/d/Y'),
+		width: 80,
+      },{
+        header: 'UPC Code',
+        dataIndex: 'upccode',
+        width: 80,
+	},{
+        header: 'Store Code',
+        dataIndex: 'storeacode',
+        width: 150,		
+     }]
+    );
+    PresidentsColumnModel.defaultSortable= true;
+    
+	
+   PresidentListingEditorGrid =  new Ext.grid.EditorGridPanel({
+      id: 'PresidentListingEditorGrid',
+      store: PresidentsDataStore,
+      cm: PresidentsColumnModel,
+      enableColLock:false,
+      clicksToEdit:2,
+      
+	  selModel: new Ext.grid.RowSelectionModel({singleSelect:false}),
+      bbar: new Ext.PagingToolbar({
+                pageSize: 15,
+                store: PresidentsDataStore,
+                displayInfo: true
+            }),
+      tbar: [
+           '-', { // Added in Tutorial 8
+            text: 'Search',
+            tooltip: 'Advanced Search',
+            handler: startAdvancedSearch,   
+            iconCls:'search'
+          }, '-', new Ext.app.SearchField({
+                    store: PresidentsDataStore,
+            params: {start: 0, limit: 15},
+                    width: 120
+        }),'-', {
+            text: 'Print',
+        tooltip: 'Print me!',
+            handler: printListing, 
+            iconCls:'print'
+          }
+      ]
+    });
+  PresidentListingEditorGrid.addListener('rowcontextmenu', onPresidentListingEditorGridContextMenu);
+
+  PresidentListingContextMenu = new Ext.menu.Menu({
+      id: 'PresidentListingEditorGridContextMenu',
+      items: [
+      { text: 'Modify this President', handler: modifyPresidentContextMenu },
+      { text: 'Delete this President', handler: deletePresidentContextMenu },
+      '-',
+      { text: 'Print this grid', handler: printListingContextMenu }
+      ]
+   });    
+    
+  PresidentListingWindow = new Ext.Window({
+      id: 'PresidentListingWindow',
+      title: 'Price List Database',
+      closable:false,
+      width:700,
+      height:450,
+      plain:false,
+      layout: 'fit',
+	  renderTo: 'myDiv',
+      items: PresidentListingEditorGrid
+    });
+    
+  PresidentsDataStore.load({params: {start: 0, limit: 15}});
+  PresidentListingWindow.show();
+  PresidentListingEditorGrid.on('afteredit', saveThePresident);
+  
+  FirstNameField = new Ext.form.TextField({
+    id: 'FirstNameField',
+    fieldLabel: 'First Name',
+    maxLength: 20,
+    allowBlank: false,
+    anchor : '95%',
+    maskRe: /([a-zA-Z0-9\s]+)$/
+      });
+      
+  LastNameField = new Ext.form.TextField({
+    id: 'LastNameField',
+    fieldLabel: 'Last Name',
+    maxLength: 20,
+    allowBlank: false,
+    anchor : '95%',    
+    maskRe: /([a-zA-Z0-9\s]+)$/  
+      });
+  
+  EnteringOfficeField = new Ext.form.DateField({
+    id:'EnteringOfficeField',
+    fieldLabel: 'Entering Office',
+    format : 'm/d/Y',
+    allowBlank: false,
+    anchor:'95%'
+    });
+    
+  LeavingOfficeField = new Ext.form.DateField({
+    id:'LeavingOfficeField',
+    fieldLabel: 'Leaving Office',
+    format : 'm/d/Y',
+    allowBlank: false,
+    anchor:'95%'
+    });
+  
+  IncomeField = new Ext.form.NumberField({
+    id:'IncomeField',
+    fieldLabel: 'Income',
+    allowNegative: false,
+    allowBlank: false,
+    anchor:'95%'
+    });
+  
+  PartyField = new Ext.form.ComboBox({
+     id:'PartyField',
+     fieldLabel: 'Party',
+     store:new Ext.data.SimpleStore({
+       fields:['partyValue', 'partyName'],
+       data: [['1','No Party'],['2','Federalist'],['3','Democratic-Republican'],['4','Democratic'],['5','Whig'],['6','Republican']]
+       }),
+     mode: 'local',
+     displayField: 'partyName',
+     allowBlank: false,
+     valueField: 'partyValue',
+     anchor:'95%',
+     triggerAction: 'all'
+      });
+  
+  
+  
+  
+});
+
+</script>
+
+
+</head>
+<body>
+
+
+
+
+
+
+
+<div id="myDiv" style="width: 100%; height: 600px; overflow: auto;">
+</body>
+</html>
