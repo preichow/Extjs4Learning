@@ -7,10 +7,7 @@ Ext.onReady(function() {
     title: 'Grid placeholder number 2',
 		height: 50
   });
-  new Ext.Panel({
-    width: 400,
-    height: 200,
-    renderTo: 'place-for-grid',
+  new Ext.Viewport({
     title: 'Web Application Panel',
     items: [grid1, grid2]
   });
