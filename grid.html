@@ -1,0 +1,26 @@
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Simple Ext JS 4 Page</title>
+    <link rel="stylesheet" type="text/css" href="http://extjs.cachefly.net/ext-4.0.2/resources/css/ext-all.css" />
+    <script type="text/javascript" src="http://extjs.cachefly.net/ext-4.0.2/ext-all-debug.js"></script>
+    <script>
+      //TODO: move that to a separate file
+      Ext.onReady(function(){
+        Ext.MessageBox.alert('test','Test Message is here');
+        
+          new Ext.Panel({
+          width: 400,
+          height:200,
+          renderTo: 'place-for-grid',
+          title: 'Web Application Panel'
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <p>This is a simple page where an ExtJS 4 panel will be rendered</p>
+    <!-- here is a placeholder for a panel-->
+    <div id="place-for-grid"></div>
+  </body>
+</html>
