@@ -23,4 +23,18 @@ Ext.onReady(function() {
     email: 'bbb',
     phone: '333'
   }]);
+  grid2.store.loadData([{
+    name: 'name3',
+    email: 'a',
+    phone: 'xxx'
+  }]);
+	//subscribe
+	grid1.on('itemdblclick', function(grid,record){
+			grid2.store.add(record);
+			grid1.store.remove(record);
+	});
+	grid2.on('itemdblclick', function(grid,record){
+			grid1.store.add(record);
+			grid2.store.remove(record);
+	});
 });
