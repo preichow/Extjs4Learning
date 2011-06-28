@@ -11,18 +11,32 @@ Ext.define('UsersGrid', {
         text: 'Name',
         width: 200,
         sortable: true,
-        hideable: false,
+        hideable: true,
         dataIndex: 'name'
       },
       {
         text: 'Email Address',
         flex: 2,
+		width: 200,
+		sortable: true,
+		hideable: true,
         dataIndex: 'email'
       },
       {
         text: 'Phone Number',
         flex: 1,
+		width: 200,
+		sortable: true,
+		hideable: true,
         dataIndex: 'phone'
+      },
+	  {
+        text: 'Address',
+        flex: 1,
+		sortable: true,
+		hideable: true,
+		width
+        dataIndex: 'address'
       }]
     });
 		UsersGrid.superclass.initComponent.apply(this,arguments);

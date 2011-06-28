@@ -1,4 +1,4 @@
 Ext.define('User', {
   extend: 'Ext.data.Model',
-  fields: ['name', 'email', 'phone']
+  fields: ['name', 'email', 'phone', 'address']
 });
