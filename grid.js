@@ -1,6 +1,7 @@
 Ext.onReady(function() {
   var grid1 = Ext.create('UsersGrid', {
     height: 200,
+	
     title: 'Application Users',
 	
   });
@@ -19,14 +20,11 @@ Ext.onReady(function() {
     email: 'aaa',
     phone: 'xxx',
 	address: 'Portland, OR'
-  },
-  {
-    name: 'name2',
+  }, { name: 'name2',
     email: 'bbb',
     phone: '333',
 	address: 'Portland, OR'
-  },
-  {
+  },  {
     name: 'name3',
     email: 'ccc',
     phone: '444',

@@ -2,7 +2,8 @@ Ext.define('UsersGrid', {
   extend: 'Ext.grid.Panel',
   initComponent: function() {
     var userStore = Ext.create('Ext.data.Store', {
-      model: 'User'
+      model: 'User',
+	   
     });
     Ext.apply(this, {
       forceFit: true,
