@@ -35,7 +35,7 @@ Ext.define('UsersGrid', {
         flex: 1,
 		sortable: true,
 		hideable: true,
-		width
+		width: 200,
         dataIndex: 'address'
       }]
     });
